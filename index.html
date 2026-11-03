@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Is It Real? Task 1</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap">
+<style>
+/* Layout: one reading column like an exam booklet; sticky bar carries timer + progress; each task is a numbered sheet */
+:root{
+  --bg:#F3F5F8; --paper:#FFFFFF; --ink:#18212E; --muted:#5A6577; --line:#D5DCE6;
+  --accent:#0E6B70; --accent-soft:#E2F1F1; --term:#9A4D12; --term-soft:#FBEBDC;
+  --field:#F6F9FB; --model:#EEF6EC; --model-ink:#24562A; --warn:#A32D2D;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-text:"Newsreader", Georgia, "Times New Roman", serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11161D; --paper:#18202A; --ink:#E6EBF1; --muted:#9AA6B6; --line:#2C3746;
+  --accent:#5CC3C6; --accent-soft:#16302F; --term:#F0A866; --term-soft:#3A2717;
+  --field:#1D2632; --model:#18291B; --model-ink:#A6D9A9; --warn:#F08A8A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11161D; --paper:#18202A; --ink:#E6EBF1; --muted:#9AA6B6; --line:#2C3746;
+  --accent:#5CC3C6; --accent-soft:#16302F; --term:#F0A866; --term-soft:#3A2717;
+  --field:#1D2632; --model:#18291B; --model-ink:#A6D9A9; --warn:#F08A8A; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+.reveal{justify-self:start}
+.reveal.done{border-color:var(--model-ink);color:var(--model-ink)}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.6}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+.wrap{max-width:780px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 64px;display:grid;gap:28px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:clamp(1.7rem,4.5vw,2.3rem);font-weight:800}
+h2{font-size:1.45rem;font-weight:800}
+h3{font-size:1.1rem;font-weight:600}
+p{margin:0}
+a{color:var(--accent)}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);border-bottom:1px solid var(--line)}
+.bar-in{max-width:780px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between}
+.bar strong{font-family:var(--f-display);font-size:1rem}
+.bar .meta{display:flex;gap:14px;align-items:center;font-size:.92rem;color:var(--muted);font-variant-numeric:tabular-nums;flex-wrap:wrap}
+.btn{font:inherit;font-weight:700;border:1.5px solid var(--accent);background:var(--accent);color:var(--paper);padding:8px 16px;border-radius:8px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:focus-visible,[contenteditable]:focus-visible,textarea:focus-visible,.term:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.sheet{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:24px;display:grid;gap:16px;min-width:0}
+.eyebrow{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:700}
+.muted{color:var(--muted)}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--accent-soft);font-weight:700}
+td textarea{min-height:64px;border:none;background:transparent;padding:0}
+.steps{display:grid;gap:8px;padding-left:1.4em;margin:0}
+.passage{font-family:var(--f-text);font-size:1.14rem;line-height:1.7;background:var(--field);border-left:3px solid var(--accent);padding:20px 22px;border-radius:0 10px 10px 0;display:grid;gap:12px;max-width:68ch}
+.passage .pn{font-family:var(--f-body);font-size:.75rem;font-weight:700;color:var(--accent);margin-right:6px;font-variant-numeric:tabular-nums}
+.example{background:var(--term-soft);border-radius:10px;padding:16px 18px;display:grid;gap:8px}
+.q{display:grid;gap:8px;padding-top:6px}
+.q-head{font-weight:400}
+.q-num{font-family:var(--f-display);font-weight:800;color:var(--accent);margin-right:6px}
+.marks{color:var(--muted);font-style:italic;white-space:nowrap}
+.term{font:inherit;font-weight:700;color:var(--term);background:var(--term-soft);border:none;border-radius:5px;padding:0 6px;cursor:pointer}
+.tip{font-size:.92rem;background:var(--term-soft);border-radius:8px;padding:8px 12px}
+textarea{width:100%;font:inherit;color:var(--ink);background:var(--field);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;min-height:110px;resize:vertical;line-height:1.55}
+textarea[readonly]{opacity:.85}
+.frame{line-height:2.25}
+.blank{display:inline;min-width:7em;padding:2px 8px;border-radius:5px;background:var(--field);border-bottom:2px solid var(--accent);color:var(--ink);outline-offset:1px}
+.blank:empty::before{content:"type here";color:var(--muted);font-style:italic;font-size:.9em}
+.blank[contenteditable="false"]{border-bottom-style:dotted}
+.opt{color:var(--muted);font-size:.92em}
+.model{background:var(--model);color:var(--model-ink);border-radius:10px;padding:12px 16px;display:grid;gap:6px;font-size:.97rem}
+.model b{font-family:var(--f-display);letter-spacing:.02em}
+.checkpoint{font-weight:700;color:var(--warn)}
+.links{font-size:.95rem}
+.video-card{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.video-card a.btn{text-decoration:none}
+.vid{position:relative;width:100%;max-width:100%;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#000}
+.vid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.vid-play{position:absolute;inset:0;width:100%;height:100%;border:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font:inherit;font-weight:700;font-size:1.1rem;background:#0b0f14 center/cover no-repeat;background-image:linear-gradient(rgba(0,0,0,.55),rgba(0,0,0,.55)),url("https://i.ytimg.com/vi/VtfyznR4TMA/hqdefault.jpg")}
+.vid-play small{font-weight:400;font-size:.85rem;opacity:.85;padding:0 16px;text-align:center}
+.vid-icon{width:64px;height:64px;border-radius:50%;background:#fff;position:relative}
+.vid-icon::after{content:"";position:absolute;left:26px;top:20px;border-left:18px solid #0b0f14;border-top:12px solid transparent;border-bottom:12px solid transparent}
+
+.finish{border:2px solid var(--accent)}
+.confirm{display:flex;gap:10px;align-items:flex-start}
+.confirm input{width:20px;height:20px;margin-top:3px;accent-color:var(--accent)}
+.status{font-size:.95rem}
+.namefield{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.namefield input{font:inherit;color:var(--ink);background:var(--field);border:1.5px solid var(--line);border-radius:8px;padding:8px 12px;flex:1 1 220px;min-width:0}
+.namefield input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.missing{color:var(--warn)}
+.scaffold{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px 20px;background:var(--accent-soft);border-radius:10px;padding:14px 16px;font-size:.95rem}
+.scaffold ul{margin:6px 0 0;padding-left:1.2em;display:grid;gap:4px}
+.starters li{font-style:italic}
+.essay-box{min-height:170px}
+@media (max-width:520px){.sheet{padding:18px}.passage{padding:16px}body{font-size:16px}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+
+<div class="bar"><div class="bar-in">
+  <strong>MYP Task 1 practice: is it real?</strong>
+  <div class="meta">
+    <span id="progress">0 of 7 questions answered</span>
+    <span id="clock">45:00</span>
+    <button class="btn ghost" id="timerBtn" type="button">Start timer</button>
+  </div>
+</div></div>
+
+<main class="wrap">
+
+<header class="sheet">
+  <span class="eyebrow">MYP eAssessment English Language and Literature</span>
+  <h1>Task 1 practice: is it real?</h1>
+  <div class="namefield"><label for="studentName"><b>Your name</b></label><input id="studentName" data-save type="text" autocomplete="name" placeholder="First and last name"></div>
+  <p>In this lesson you practise Task 1 of the eAssessment with two non-literary texts: an opinion column and a TV news report. You will answer short questions on both, and then write your own compare-and-contrast essay using a paragraph-by-paragraph structure.</p>
+  <p>Work on your own and attempt every question. Do not use AI.</p>
+  <p><b>Your answers save automatically in this browser.</b> When you have written an answer, press <b>Check my answer</b> under it to see a model answer. Checking locks that answer, so finish it first.</p>
+  <p><b>At the end of the lesson:</b> press <b>Download all responses</b>, then upload the Word file to this lesson's assignment on <b>Toddle</b>.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Time</th><th>Part</th><th>What you do</th></tr></thead>
+    <tbody>
+      <tr><td>0 to 3 min</td><td>Start</td><td>Type your name, read these instructions and press <b>Start timer</b>.</td></tr>
+      <tr><td>3 to 7 min</td><td>Command term toolkit</td><td>Read the table of command terms.</td></tr>
+      <tr><td>7 to 17 min</td><td>Part A: written text (Task 1A and 1B)</td><td>Read the opinion column, then answer five short questions.</td></tr>
+      <tr><td>17 to 26 min</td><td>Part B: news report (Task 1C and 1D)</td><td>Watch the report twice, then answer two short questions.</td></tr>
+      <tr><td>26 to 42 min</td><td>Part C: compare and contrast (Task 1E practice)</td><td>Fill in the comparison grid, then write your essay paragraph by paragraph.</td></tr>
+      <tr><td>42 to 45 min</td><td>Submit</td><td>Download all responses and upload the file to Toddle.</td></tr>
+    </tbody>
+  </table></div>
+  <h3>The 3-step routine for every short question</h3>
+  <ol class="steps">
+    <li><b>Spot</b> the command term (the orange word). Tap it to see what it asks.</li>
+    <li><b>Check</b> the toolkit: what kind of thinking does it want?</li>
+    <li><b>Answer</b> in 2 to 3 sentences: make your point, give evidence (a short quotation or a precise detail from the report), then say what it shows.</li>
+  </ol>
+  <p class="muted">Stuck for more than two minutes? Write what you can and move on.</p>
+</header>
+
+<section class="sheet" id="toolkit">
+  <span class="eyebrow">Minutes 3 to 7</span>
+  <h2>Command term toolkit</h2>
+  <p>Every question in Task 1 begins with a command term. It tells you exactly what kind of thinking the examiner wants to see. Today's questions use these terms.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Command term</th><th>What it asks you to do</th><th>Sentence starter to try</th></tr></thead>
+    <tbody id="toolkitBody"></tbody>
+  </table></div>
+  <p><b>Quick check:</b> cover the middle column. What is the difference between <i>describe</i> and <i>analyse</i>? Between <i>explain</i> and <i>justify</i>?</p>
+</section>
+
+<section class="sheet" id="partA">
+  <span class="eyebrow">Minutes 7 to 17 · Task 1A and 1B</span>
+  <h2>Part A: the written text</h2>
+  <p>Read the column once all the way through (about 4 minutes). Then read it again with the questions in mind. The paragraphs are numbered so you can refer to them.</p>
+  <h3>Text A: "The Beach That Wasn't There"</h3>
+  <p class="muted"><i>An opinion column from the travel section of a weekend newspaper</i></p>
+  <div class="passage">
+    <p><span class="pn">1</span>Last winter, exhausted after a year of deadlines, I saw the beach that would save me. It appeared on my phone at two in the morning: white sand, water the colour of a swimming pool, a single wooden hut under a palm tree. No crowds. No noise. The caption promised "the reset you deserve." I booked the flights before breakfast.</p>
+    <p><span class="pn">2</span>The beach existed, technically. It was on the map, on the coast where the post said it would be. But the sand was grey, the water was the ordinary green-blue of the sea, and the wooden hut was a car park. A local café owner laughed when I showed her the picture. "Ah," she said. "Another one. We get three a week."</p>
+    <p><span class="pn">3</span>The photo, it turned out, had been generated by artificial intelligence and shared by an account that earned money every time someone clicked its booking link. Nobody had lied to me in words. The picture had done the lying all by itself.</p>
+    <p><span class="pn">4</span>I was angry, and then I was embarrassed, and then I was something worse: suspicious. Back home, I started doubting everything. A friend's sunset? Too orange. A hotel's swimming pool? Too blue. A smiling family in an advert? Too perfect, surely. Within a month I had stopped believing in anything beautiful.</p>
+    <p><span class="pn">5</span>This is the hidden cost of fake images. We worry, rightly, about being fooled. We talk much less about what happens next: once we have been fooled, we stop trusting what is real. A genuinely stunning lake begins to look fake. A genuinely happy person begins to look like a computer's idea of happiness.</p>
+    <p><span class="pn">6</span>So what should we do? Believing everything again is no answer. Asking better questions might be. Who made this image, and what do they want me to do? Is there a name, a place or a person I can check? Has anyone I trust actually been there?</p>
+    <p><span class="pn">7</span>And perhaps we should ask ourselves a harder question: why was I so ready to believe? I was tired. I wanted an escape so badly that I let a picture make the decision for me. The advertisers knew that. They always do.</p>
+    <p><span class="pn">8</span>In the end, I stayed the full week on the grey beach. I swam in the ordinary sea. I ate fried fish at the café, and the owner told me about the storm that had taken the old pier. It was nothing like the reset I had been promised. It was better, because it was real.</p>
+  </div>
+
+  <div class="example">
+    <b>Worked example: use this as a model</b>
+    <p><b>Question:</b> <b>Interpret</b> what the writer means by "The picture had done the lying all by itself" (paragraph 3).</p>
+    <p><b>Model answer:</b> The writer means that no one wrote a false statement, yet the image still deceived the writer, because people trust what they see. The phrase "all by itself" suggests that pictures can mislead without anyone needing to say anything untrue. This makes the reader realise how easily images can persuade us.</p>
+    <p class="muted"><i>Pattern:</i> <b>point</b> (what the writer means or does), <b>evidence</b> (short quotation), <b>effect</b> (what it shows or how it affects the reader).</p>
+  </div>
+
+  <h3>Task 1A</h3>
+  <div id="q1"></div><div id="q2"></div><div id="q3"></div>
+  <h3>Task 1B</h3>
+  <div id="q4"></div><div id="q5"></div>
+  <p class="checkpoint">Checkpoint, minute 17: stop Part A now, even if you have not finished, and move on to Part B.</p>
+</section>
+
+<section class="sheet" id="partB">
+  <span class="eyebrow">Minutes 17 to 26 · Task 1C and 1D</span>
+  <h2>Part B: the news report</h2>
+  <div class="video-card">
+    <div>
+      <h3>Text B: "Kiwi actor faces claims he's AI in Tourism NZ ad targeting stressed-out Americans"</h3>
+      <p class="muted">A New Zealand TV news report (2026) about Tourism New Zealand's wellness campaign for American visitors and its host, actor Jordi Webber.</p>
+    </div>
+    <a class="btn" href="https://www.youtube.com/watch?v=VtfyznR4TMA" target="_blank" rel="noopener">Watch on YouTube</a>
+  </div>
+  <div class="vid" id="vid"><button type="button" class="vid-play" id="vidPlay" aria-label="Play the report on this page"><span class="vid-icon" aria-hidden="true"></span><span>Play the report here</span><small>If the player stays blank, use the Watch on YouTube button.</small></button></div>
+  <p class="links muted">If the report does not play here, use the Watch on YouTube button. If the link does not work, search YouTube for <b>Kiwi actor faces claims he's AI Tourism NZ</b>. Put your headphones on.</p>
+  <ul class="steps">
+    <li><b>First viewing:</b> just watch and listen. What is the story? What is the mood of the report?</li>
+    <li><b>Second viewing:</b> make quick notes in the grid. Pause if you need to.</li>
+  </ul>
+  <div class="tbl"><table>
+    <thead><tr><th>Part of the report</th><th>What do we learn?</th><th>How is it shown or said? (footage, interview, voiceover)</th></tr></thead>
+    <tbody id="videoGrid"></tbody>
+  </table></div>
+  <p class="muted"><b>Tip:</b> in a news report, your evidence can be something a person says, a fact the reporter states, a clip that is shown, or the order in which information is presented.</p>
+  <button class="btn ghost reveal" type="button" data-model="videoModel" data-inputs="#videoGrid textarea" disabled>Check my notes</button>
+  <div class="model" id="videoModel" hidden>
+    <b>Model notes</b>
+    <p><b>The advertisement:</b> Tourism New Zealand presents the country as a "wellness studio" for a week-long reset, with nature such as forests, coastlines and geothermal waters, plus adventure activities.</p>
+    <p><b>Who it targets and why:</b> stressed, time-poor Americans; the US is one of New Zealand's biggest visitor markets.</p>
+    <p><b>The AI claims:</b> some viewers online said the host looked too handsome and too polished to be a real person.</p>
+    <p><b>Jordi Webber's response:</b> he is a real Māori actor from Rotorua; he jokes about the question ("Maybe I'm an alien") but admits that with so many AI ads, it is hard to tell.</p>
+    <p><b>Tone of the report:</b> light-hearted and playful, while still raising a serious question about trust in what we see.</p>
+  </div>
+  <h3>Task 1C</h3>
+  <div id="q6"></div>
+  <h3>Task 1D</h3>
+  <div id="q7"></div>
+  <p class="checkpoint">Checkpoint, minute 26: stop Part B and move on to Part C.</p>
+</section>
+
+<section class="sheet" id="partC">
+  <span class="eyebrow">Minutes 26 to 42 · Task 1E practice</span>
+  <h2>Part C: compare and contrast essay</h2>
+  <p>In the real eAssessment, Task 1E asks you to write a full compare-and-contrast essay. Today you write it paragraph by paragraph. For each paragraph, read what to include, choose the sentence starters that help you, and write the paragraph in your own words in the box.</p>
+  <p><b>Essay question:</b> Compare and contrast how Text A ("The Beach That Wasn't There") and Text B (the news report on Tourism New Zealand's advertisement) present the difficulty of knowing what is real.</p>
+  <h3>Before you write: the comparison grid (3 minutes)</h3>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th>Text A: the opinion column</th><th>Text B: the news report</th></tr></thead>
+    <tbody id="compGrid"></tbody>
+  </table></div>
+  <button class="btn ghost reveal" type="button" data-model="compModel" data-inputs="#compGrid textarea" disabled>Check my grid</button>
+  <div class="model" id="compModel" hidden>
+    <b>Model grid</b>
+    <p><b>Main message:</b> A: fake images fool us and then make us stop trusting real things; we should ask better questions. B: AI is now so common that people doubt even a real person in an advert.</p>
+    <p><b>Purpose and audience:</b> A: to persuade and warn newspaper readers. B: to inform a general TV audience about a news story, with some entertainment.</p>
+    <p><b>Evidence:</b> A: "Within a month I had stopped believing in anything beautiful." B: viewers claiming the host is too perfect to be real; Webber's joke "Maybe I'm an alien".</p>
+    <p><b>Tone:</b> A: personal, reflective, slightly bitter, then calm. B: light-hearted and playful, with a serious question underneath.</p>
+    <p><b>Effect on the audience:</b> A: readers question their own habits and trust. B: viewers are amused but also made aware of how AI changes what we believe.</p>
+  </div>
+  <div class="example">
+    <b>How a strong comparative paragraph works</b>
+    <p>Each body paragraph should discuss <b>both texts</b>. Use this pattern: <b>point</b> about both texts, <b>evidence</b> from Text A, <b>evidence</b> from Text B, <b>comparison</b> (similar or different?), <b>effect</b> on the audience.</p>
+  </div>
+  <div id="frames"></div>
+  <p class="muted"><b>Useful linking words:</b> both, similarly, likewise, in the same way, however, in contrast, whereas, while, on the other hand, unlike, therefore, as a result, ultimately.</p>
+  <p class="checkpoint">Checkpoint, minute 42: stop writing, then download your responses and upload them to Toddle.</p>
+</section>
+
+<section class="sheet finish" id="finish">
+  <span class="eyebrow">Minutes 42 to 45</span>
+  <h2>Submit your work on Toddle</h2>
+  <ol class="steps">
+    <li>Check that your <b>name</b> is filled in at the top of this page.</li>
+    <li>Press <b>Download all responses</b>. A Word file with all your answers and your essay will be saved.</li>
+    <li>Open <b>Toddle</b>, find this lesson's assignment, upload the Word file and press <b>Submit</b>.</li>
+  </ol>
+  <p class="status" id="status"></p>
+  <div style="display:flex;flex-wrap:wrap;gap:10px">
+    <button class="btn" id="dlBtn" type="button">Download all responses</button>
+    <button class="btn ghost" id="copyBtn" type="button">Copy all my answers</button>
+  </div>
+  <p class="muted" id="copyMsg">If the download does not work, press Copy all my answers and paste them into the Toddle assignment instead.</p>
+  <textarea id="copyArea" hidden readonly aria-label="All your answers"></textarea>
+</section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
+<script>
+const TERMS=[
+ ["Identify","Name or point out something specific. Short and precise.",'"The caption uses the phrase..."'],
+ ["Summarize","Bring together the main points briefly, in your own words.",'"The writer moves from... to... and finally..."'],
+ ["Explain","Give reasons or causes. Say how or why.",'"The writer includes this because... This shows..."'],
+ ["Analyse","Break something into parts and show how each part creates meaning or effect.",'"The questions... create the effect of... which makes the reader..."'],
+ ["Justify","Give valid reasons or evidence to support an answer or conclusion.",'"This view is convincing because... This is shown when..."'],
+ ["Describe","Give a detailed account of what you see, hear or read.",'"In the report, Webber..."'],
+ ["Evaluate","Weigh up strengths and limitations to judge how well something works.",'"This is effective because... However, ..."'],
+ ["Compare and contrast","Show similarities and differences, discussing both texts together.",'"Both texts... However, while Text A..., Text B..."']];
+const termMap=Object.fromEntries(TERMS.map(t=>[t[0],t]));
+document.getElementById('toolkitBody').innerHTML=TERMS.map(t=>`<tr><td><b>${t[0]}</b></td><td>${t[1]}</td><td>${t[2]}</td></tr>`).join('');
+
+const QS=[
+ {id:"q1",term:"Identify",text:"the phrase in the caption that persuaded the writer to book the trip (paragraph 1).",marks:"1 mark",rows:2,
+  model:'The caption promised "the reset you deserve."'},
+ {id:"q2",term:"Summarize",text:"how the writer's feelings change in paragraph 4.",marks:"2 marks",
+  model:'The writer moves from anger to embarrassment and then to suspicion. This suspicion grows until the writer doubts everything, even real photos from friends, and stops "believing in anything beautiful".'},
+ {id:"q3",term:"Explain",text:'why the writer includes the café owner\'s words "Another one. We get three a week." (paragraph 2).',marks:"3 marks",
+  model:'The café owner\'s casual reply shows that fake travel images are a common problem that fool many visitors. The word "another" makes the writer seem like one of many victims, so the experience feels less like a personal mistake. It also adds humour and a local voice, which makes the writer\'s argument in later paragraphs more convincing.'},
+ {id:"q4",term:"Analyse",text:"how the writer uses questions in paragraph 6 to affect the reader.",marks:"3 marks",
+  model:'The questions ("Who made this image, and what do they want me to do?") work like a checklist that readers can use themselves. Because they are direct and practical, the reader is invited to think actively and test images before trusting them. They also change the tone from complaint to advice, so the column offers a solution as well as a warning.'},
+ {id:"q5",term:"Justify",text:'the writer\'s view in paragraph 8 that the real holiday was "better" than the one promised.',marks:"3 marks",
+  model:'The view is convincing because the real holiday gave the writer genuine experiences: swimming in "the ordinary sea" and eating "fried fish at the café". The owner\'s story about "the storm that had taken the old pier" shows a real human connection that a fake image could never offer. This supports the column\'s message that honest, imperfect experiences are worth more than perfect illusions.'},
+ {id:"q6",term:"Describe",text:"how Jordi Webber responds to the claims that he is not a real person.",marks:"3 marks",
+  model:'Webber responds with humour: when asked if he is real, he jokes, "Maybe I\'m an alien." He does not seem offended, and treats the claims in a relaxed, good-natured way. However, he also admits that with so many AI adverts and AI people around, "it\'s hard to tell", which shows he understands why viewers were suspicious.'},
+ {id:"q7",term:"Evaluate",text:"how effectively the news report helps the audience understand why some viewers thought the advertisement was AI-generated.",marks:"3 marks",
+  model:'The report is effective because it shows clips from the polished advertisement, so viewers can judge for themselves why the host looked "too perfect". Including Webber in person proves he is real and lets him respond, which balances the claims. A limitation is that the playful tone may make the issue seem like a joke, so the serious question of trust in images is only touched on briefly.'}];
+
+for(const q of QS){
+  const t=termMap[q.term];
+  document.getElementById(q.id).innerHTML=`<div class="q">
+   <p class="q-head"><span class="q-num">${q.id.slice(1)}.</span><button class="term" type="button" aria-expanded="false" data-tip="${q.id}-tip">${q.term}</button> ${q.text} <span class="marks">(${q.marks})</span></p>
+   <p class="tip" id="${q.id}-tip" hidden><b>${q.term}:</b> ${t[1]} Try: ${t[2]}</p>
+   <label class="muted" for="${q.id}-a" style="font-size:.9rem">Your answer (2 to 3 sentences)</label>
+   <textarea id="${q.id}-a" data-save rows="${q.rows||4}"></textarea>
+   <button class="btn ghost reveal" type="button" data-model="${q.id}-m" data-inputs="#${q.id}-a" disabled>Check my answer</button>
+   <div class="model" id="${q.id}-m" hidden><b>Model answer</b><p>${q.model}</p></div></div>`;
+}
+document.querySelectorAll('.term').forEach(b=>b.addEventListener('click',()=>{
+  const tip=document.getElementById(b.dataset.tip); tip.hidden=!tip.hidden; b.setAttribute('aria-expanded',String(!tip.hidden));}));
+
+const scenes=["The advertisement","Who it targets and why","The AI claims","Jordi Webber's response","Tone of the report"];
+const VG_COLS=["What do we learn?","How is it shown or said?"];
+document.getElementById('videoGrid').innerHTML=scenes.map((s,i)=>`<tr><td><b>${s}</b></td><td><textarea id="vg${i}a" data-save aria-label="${s}: what we learn"></textarea></td><td><textarea id="vg${i}b" data-save aria-label="${s}: how it is shown"></textarea></td></tr>`).join('');
+const comp=["Main message about what is real","Purpose and audience","One key piece of evidence","Tone or mood [reflective / bitter / playful / serious / warning]","Effect on the audience"];
+document.getElementById('compGrid').innerHTML=comp.map((s,i)=>`<tr><td><b>${s}</b></td><td><textarea id="cg${i}a" data-save aria-label="${s}: Text A"></textarea></td><td><textarea id="cg${i}b" data-save aria-label="${s}: Text B"></textarea></td></tr>`).join('');
+
+// Essay structure: include list, starters, writing box
+const ESSAY=[
+ {h:"Paragraph 1: Introduction",tip:"3 to 4 sentences",
+  include:["Name both texts and their text types (opinion column, TV news report).","State the shared theme: how hard it is to know what is real.","Give your thesis: one key similarity and one key difference."],
+  starters:['Both the opinion column "The Beach That Wasn\'t There" and the news report about... explore...','While both texts suggest that..., they differ in...','Text A presents this through..., whereas Text B...','Ultimately, ...'],
+  model:'Both the opinion column "The Beach That Wasn\'t There" and the news report about Tourism New Zealand\'s advertisement explore how difficult it has become to know what is real. While both texts suggest that artificial intelligence has made people suspicious of images, they differ in purpose and tone. Text A presents this through a personal story of being fooled, whereas Text B reports on viewers who doubted a real person. Ultimately, Text A warns its readers, while Text B treats the issue with gentle humour.'},
+ {h:"Paragraph 2: Similarity (theme of trust)",tip:"5 to 6 sentences",
+  include:["Point: both texts show that suspicion now affects real things too.","Evidence from Text A (a short quotation).","Evidence from Text B (something said or shown).","Effect: what both creators want the audience to realise."],
+  starters:['One key similarity is that both texts show...','In Text A, the writer admits that "...", which suggests...','Similarly, in Text B, ...','This shows that...','In both texts, the audience is encouraged to realise that...'],
+  model:'One key similarity is that both texts show how fake images can make people doubt what is real. In Text A, the writer admits that "Within a month I had stopped believing in anything beautiful", which suggests that being fooled once damages trust in everything. Similarly, in Text B, some viewers decided that the host of the advertisement was too handsome and polished to be human, even though he is a real actor. This shows that suspicion now falls on genuine people as well as fake ones. In both texts, the audience is encouraged to realise that AI has changed the way we look at every image.'},
+ {h:"Paragraph 3: Difference (purpose, audience and form)",tip:"5 to 6 sentences",
+  include:["Point: the texts have different purposes and forms.","Text A: opinion column, first person, persuades and advises.","Text B: TV news report, informs a wide audience, uses footage and interview.","Why this difference matters for the audience."],
+  starters:['However, the two texts differ in purpose and form.','Text A is an opinion column written in the first person, so...','For example, the writer asks, "...", which...','In contrast, Text B is a news report that...','This difference matters because...'],
+  model:'However, the two texts differ in purpose and form. Text A is an opinion column written in the first person, so the writer can share a personal experience and argue for a change in behaviour. For example, the writer asks, "Who made this image, and what do they want me to do?", which gives readers a practical way to test what they see. In contrast, Text B is a news report that informs a general audience about a recent story, using clips from the advertisement and an interview with Jordi Webber. This difference matters because the column tries to change how readers think, while the report mainly lets viewers see the story and judge it for themselves.'},
+ {h:"Paragraph 4: Difference (tone and methods)",tip:"5 to 6 sentences",
+  include:["Point: the texts create different tones.","A method in Text A (short sentences, questions, the café owner, the ending).","A method in Text B (humour, Webber's joke, visuals from the advert).","Effect on the audience of each tone."],
+  starters:['The creators also use different methods, which create different tones.','Text A uses... such as "...", which creates a ... tone.','On the other hand, Text B...','For instance, when Webber says "...", the audience...','As a result, readers of Text A feel..., whereas viewers of Text B feel...'],
+  model:'The creators also use different methods, which create different tones. Text A uses short questions and fragments such as "A friend\'s sunset? Too orange.", which creates a reflective and slightly bitter tone. On the other hand, Text B keeps the mood light, using the polished images from the advertisement and Webber\'s relaxed reaction. For instance, when Webber jokes, "Maybe I\'m an alien", the audience is invited to laugh at the claims. As a result, readers of Text A feel the seriousness of being deceived, whereas viewers of Text B feel amused but quietly uneasy.'},
+ {h:"Paragraph 5: Conclusion",tip:"3 to 4 sentences",
+  include:["Sum up the main similarity and the main differences (no new evidence).","Say what the two texts suggest together.","End with your own judgement: which text is more effective, and why?"],
+  starters:['In conclusion, both texts explore...','Text A uses... to..., whereas Text B uses... to...','Together, the two texts suggest that...','Personally, I found Text ... more effective because...'],
+  model:'In conclusion, both texts explore how artificial intelligence has made it harder to trust what we see. Text A uses a personal story and direct questions to persuade readers to think carefully, whereas Text B uses humour and a real interview to show how quickly people now assume something is fake. Together, the two texts suggest that in an age of AI, being too trusting and being too suspicious can both be problems. (Your final sentence is your own judgement. Did you give a reason?)'}];
+document.getElementById('frames').innerHTML=ESSAY.map((p,i)=>`<div class="q essay-p">
+  <h3>${p.h} <span class="marks">(${p.tip})</span></h3>
+  <div class="scaffold">
+    <div><b>Include:</b><ul>${p.include.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+    <div><b>Sentence starters:</b><ul class="starters">${p.starters.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+  </div>
+  <label class="muted" for="e${i}" style="font-size:.9rem">Write your paragraph here</label>
+  <textarea id="e${i}" class="essay-box" data-save rows="8"></textarea>
+  <button class="btn ghost reveal" type="button" data-model="e${i}-m" data-inputs="#e${i}" disabled>Check this paragraph</button>
+  <div class="model" id="e${i}-m" hidden><b>Model paragraph</b><p>${p.model}</p></div></div>`).join('');
+
+// Save / restore
+const KEY='myp-task1-real-v1';
+let store={};
+try{store=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){store={};}
+const fields=[...document.querySelectorAll('[data-save]')];
+const getVal=el=>(el.tagName==='TEXTAREA'||el.tagName==='INPUT')?el.value:el.textContent;
+const setVal=(el,v)=>{if(el.tagName==='TEXTAREA'||el.tagName==='INPUT')el.value=v;else el.textContent=v;};
+fields.forEach(el=>{if(store.f&&store.f[el.id])setVal(el,store.f[el.id]);el.addEventListener('input',()=>{save();updateProgress();});});
+function save(){store.f={};fields.forEach(el=>{const v=getVal(el).trim();if(v)store.f[el.id]=v;});try{localStorage.setItem(KEY,JSON.stringify(store));}catch(e){}}
+function updateProgress(){
+  const n=QS.filter(q=>document.getElementById(q.id+'-a').value.trim()).length;
+  document.getElementById('progress').textContent=`${n} of 7 questions answered`;
+  const essays=[...document.querySelectorAll('.essay-box')];const ef=essays.filter(b=>b.value.trim()).length;const words=essays.reduce((n,b)=>n+(b.value.trim()?b.value.trim().split(/\s+/).length:0),0);
+  const missing=QS.filter(q=>!document.getElementById(q.id+'-a').value.trim()).map(q=>q.id.slice(1));
+  document.getElementById('status').innerHTML=`Short answers: <b>${n} of 7</b>. Essay paragraphs written: <b>${ef} of ${essays.length}</b> (${words} words).`+(missing.length?` <span class="missing">Still empty: question ${missing.join(', ')}.</span>`:'');
+  refreshButtons();
+}
+
+// Timer
+const PHASES=[[3,'Start'],[7,'Command terms'],[17,'Part A'],[26,'Part B'],[42,'Part C'],[45,'Download and upload to Toddle']];
+let tInt=null;
+function tick(){
+  const start=store.t; if(!start)return;
+  const el=Math.floor((Date.now()-start)/1000), left=Math.max(0,45*60-el);
+  const min=el/60, ph=(PHASES.find(p=>min<p[0])||[0,'Time is up'])[1];
+  document.getElementById('clock').textContent=`${String(Math.floor(left/60)).padStart(2,'0')}:${String(left%60).padStart(2,'0')} left · ${ph}`;
+  if(left===0){clearInterval(tInt);}
+}
+function startTimer(){if(!store.t){store.t=Date.now();save();}document.getElementById('timerBtn').hidden=true;tick();clearInterval(tInt);tInt=setInterval(tick,1000);}
+document.getElementById('timerBtn').addEventListener('click',startTimer);
+if(store.t)startTimer();
+
+// Per-question check
+store.r=store.r||{};
+const revealBtns=[...document.querySelectorAll('.reveal')];
+const inputsOf=btn=>[...document.querySelectorAll(btn.dataset.inputs)];
+function refreshButtons(){revealBtns.forEach(btn=>{if(store.r[btn.dataset.model])return;btn.disabled=!inputsOf(btn).some(el=>getVal(el).trim());});}
+function revealOne(btn){
+  document.getElementById(btn.dataset.model).hidden=false;
+  inputsOf(btn).forEach(el=>{if(el.tagName==='TEXTAREA')el.readOnly=true;else el.setAttribute('contenteditable','false');});
+  btn.disabled=true;btn.classList.add('done');btn.textContent='Checked: compare your answer with the model';
+}
+revealBtns.forEach(btn=>{
+  btn.addEventListener('click',()=>{store.r[btn.dataset.model]=true;save();revealOne(btn);});
+  if(store.r[btn.dataset.model])revealOne(btn);
+});
+
+// Gather responses
+const nameVal=()=>document.getElementById('studentName').value.trim();
+function getPlainText(){
+  const out=['MYP Task 1 practice (is it real?): my answers','Name: '+(nameVal()||'(not given)'),''];
+  QS.forEach(q=>{out.push(`${q.id.slice(1)}. ${q.term} ${q.text}`);out.push(document.getElementById(q.id+'-a').value.trim()||'(no answer)');out.push('');});
+  out.push('Video notes:');scenes.forEach((sc,i)=>out.push(`${sc}: what we learn: ${document.getElementById('vg'+i+'a').value.trim()||'-'} | how it is shown: ${document.getElementById('vg'+i+'b').value.trim()||'-'}`));out.push('');
+  out.push('Comparison grid:');comp.forEach((c,i)=>out.push(`${c}: Text A: ${document.getElementById('cg'+i+'a').value.trim()||'-'} | Text B: ${document.getElementById('cg'+i+'b').value.trim()||'-'}`));out.push('');
+  out.push('Compare and contrast essay:');out.push('');
+  ESSAY.forEach((p,i)=>{out.push(p.h);out.push(document.getElementById('e'+i).value.trim()||'(not written)');out.push('');});
+  return out.join('\n');
+}
+async function buildDocx(){
+  const D=window.docx;const W=9026;
+  const bd={style:D.BorderStyle.SINGLE,size:6,color:'9AA6B6'};const borders={top:bd,bottom:bd,left:bd,right:bd};
+  const para=(text,o={})=>new D.Paragraph({spacing:{after:120},children:[new D.TextRun({text,...o})]});
+  const H=(t,l)=>new D.Paragraph({heading:l,spacing:{before:240,after:120},children:[new D.TextRun(t)]});
+  const cell=(t,w,head)=>new D.TableCell({width:{size:w,type:D.WidthType.DXA},borders,shading:head?{type:D.ShadingType.CLEAR,color:'auto',fill:'E2F1F1'}:undefined,margins:{top:60,bottom:60,left:100,right:100},children:[new D.Paragraph({children:[new D.TextRun({text:t||'',bold:!!head})]})]});
+  const grid=(hdr,rows,ws)=>new D.Table({width:{size:W,type:D.WidthType.DXA},columnWidths:ws,rows:[new D.TableRow({tableHeader:true,children:hdr.map((h,i)=>cell(h,ws[i],true))}),...rows.map(r=>new D.TableRow({children:r.map((c,i)=>cell(c,ws[i]))}))]});
+  const kids=[
+    new D.Paragraph({heading:D.HeadingLevel.TITLE,children:[new D.TextRun('MYP Task 1 practice (is it real?): my responses')]}),
+    para('Name: '+(nameVal()||'(not given)'),{bold:true}),
+    para('Downloaded: '+new Date().toLocaleString()),
+    H('Part A and Part B: short answers',D.HeadingLevel.HEADING_1)];
+  QS.forEach(q=>{
+    kids.push(new D.Paragraph({spacing:{before:160,after:60},children:[new D.TextRun({text:q.id.slice(1)+'. ',bold:true}),new D.TextRun({text:q.term,bold:true,color:'0E6B70'}),new D.TextRun(' '+q.text+' ('+q.marks+')')]}));
+    const ans=document.getElementById(q.id+'-a').value.trim();
+    ans?ans.split(/\n+/).forEach(l=>kids.push(para(l))):kids.push(para('(no answer)',{italics:true,color:'777777'}));
+    if(store.r&&store.r[q.id+'-m'])kids.push(para('Model answer checked after writing.',{italics:true,color:'777777',size:18}));
+  });
+  kids.push(H('Video notes',D.HeadingLevel.HEADING_1));
+  kids.push(grid(['Part of the report',VG_COLS[0],VG_COLS[1]],scenes.map((sc,i)=>[sc,document.getElementById('vg'+i+'a').value.trim(),document.getElementById('vg'+i+'b').value.trim()]),[2200,3413,3413]));
+  kids.push(H('Comparison grid',D.HeadingLevel.HEADING_1));
+  kids.push(grid(['','Text A: the opinion column','Text B: the news report'],comp.map((c,i)=>[c,document.getElementById('cg'+i+'a').value.trim(),document.getElementById('cg'+i+'b').value.trim()]),[2600,3213,3213]));
+  kids.push(H('Compare and contrast essay',D.HeadingLevel.HEADING_1));
+  kids.push(para('Essay question: Compare and contrast how Text A and Text B present the difficulty of knowing what is real.',{italics:true}));
+  ESSAY.forEach((p,i)=>{
+    kids.push(H(p.h,D.HeadingLevel.HEADING_2));
+    const t=document.getElementById('e'+i).value.trim();
+    t?t.split(/\n+/).forEach(l=>kids.push(new D.Paragraph({spacing:{after:120,line:320},children:[new D.TextRun(l)]}))):kids.push(para('(not written)',{italics:true,color:'777777'}));
+  });
+  const doc=new D.Document({styles:{default:{document:{run:{font:'Calibri',size:22}}}},
+    sections:[{properties:{page:{size:{width:11906,height:16838},margin:{top:1440,bottom:1440,left:1440,right:1440}}},children:kids}]});
+  return D.Packer.toBlob(doc);
+}
+const msgEl=()=>document.getElementById('copyMsg');
+document.getElementById('dlBtn').addEventListener('click',async()=>{
+  const btn=document.getElementById('dlBtn');btn.disabled=true;
+  const safe=(nameVal()||'student').replace(/[^\p{L}\p{N} _-]+/gu,'').trim().replace(/\s+/g,'_')||'student';
+  let data,filename;
+  try{
+    if(window.docx){data=await buildDocx();filename=`MYP_Task1_IsItReal_${safe}.docx`;}
+    else{data=getPlainText();filename=`MYP_Task1_IsItReal_${safe}.txt`;}
+  }catch(e){data=getPlainText();filename=`MYP_Task1_IsItReal_${safe}.txt`;}
+  try{
+    if(window.claude&&window.claude.use){
+      const dl=await window.claude.use('downloads');
+      if(!dl){msgEl().textContent='Download is not available here. Press Copy all my answers and paste them into the Toddle assignment.';return;}
+      try{await dl.save({filename,data});msgEl().textContent='Downloaded '+filename+'. Now upload it to the assignment on Toddle and press Submit.';}
+      catch(e){msgEl().textContent=e&&e.code==='declined'?'Download cancelled. Press the button again when you are ready.':(e&&e.code==='rate_limited'?'Please wait a moment, then try again.':'Download is not available here. Press Copy all my answers and paste them into the Toddle assignment.');}
+      return;
+    }
+    const blob=data instanceof Blob?data:new Blob([data],{type:'text/plain'});
+    const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),4000);
+    msgEl().textContent='Downloaded '+filename+'. Now upload it to the assignment on Toddle and press Submit.';
+  }finally{btn.disabled=false;}
+});
+document.getElementById('copyBtn').addEventListener('click',()=>{
+  const text=getPlainText(), area=document.getElementById('copyArea'), msg=msgEl();
+  const fallback=()=>{area.hidden=false;area.value=text;area.select();msg.textContent='Select all the text in the box and copy it.';};
+  try{navigator.clipboard.writeText(text).then(()=>{msg.textContent='Copied. Paste your answers into the assignment on Toddle.';},fallback);}catch(e){fallback();}
+});
+updateProgress();
+
+document.getElementById('vidPlay').addEventListener('click',()=>{
+  const f=document.createElement('iframe');
+  f.src='https://www.youtube.com/embed/VtfyznR4TMA?autoplay=1&rel=0';
+  f.title='Kiwi actor faces claims he is AI';
+  f.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';
+  f.referrerPolicy='strict-origin-when-cross-origin';
+  f.allowFullscreen=true;
+  const v=document.getElementById('vid'); v.innerHTML=''; v.appendChild(f);
+});
+</script>
+</body>
+</html>
